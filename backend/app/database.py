@@ -1,11 +1,16 @@
-from collections.abc import Generator
 import os
+from collections.abc import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./battery_fleet.db")
+default_sqlite_url = (
+    "sqlite:////tmp/battery_fleet.db"
+    if os.getenv("VERCEL")
+    else "sqlite:///./battery_fleet.db"
+)
+DATABASE_URL = os.getenv("DATABASE_URL", default_sqlite_url)
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 

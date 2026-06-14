@@ -63,6 +63,23 @@ The frontend local env file should contain:
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 ```
 
+## Vercel Serverless Notes
+
+When deployed without `DATABASE_URL`, the backend uses SQLite in `/tmp`. That storage is ephemeral in serverless environments, so the dashboard endpoints auto-seed synthetic data when no batteries exist.
+
+For the first portfolio deployment, use:
+
+```text
+NEXT_PUBLIC_API_URL=/api
+```
+
+For a more production-like deployment, add PostgreSQL and set:
+
+```text
+DATABASE_URL=<postgresql connection string>
+FRONTEND_URL=<vercel app URL>
+```
+
 ## Verification Commands
 
 Backend tests:

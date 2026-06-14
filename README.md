@@ -181,7 +181,9 @@ Frontend:
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8001
 ```
 
-When `DATABASE_URL` is not set, the backend uses local SQLite. For production PostgreSQL, set `DATABASE_URL` in the deployment environment. Do not hardcode credentials.
+When `DATABASE_URL` is not set, the backend uses local SQLite. On Vercel, the SQLite fallback uses `/tmp` and dashboard endpoints auto-seed synthetic data when no records exist. For a production-style deployment, set `DATABASE_URL` to PostgreSQL. Do not hardcode credentials.
+
+If `NEXT_PUBLIC_API_URL` is not set in a deployed browser environment, the frontend falls back to `/api`, which matches the Vercel rewrite in `vercel.json`.
 
 ## API Endpoints
 
@@ -277,10 +279,10 @@ Suggested Vercel environment variables:
 ```text
 DATABASE_URL=<postgresql connection string>
 FRONTEND_URL=<deployed frontend URL>
-NEXT_PUBLIC_API_URL=<deployed backend API URL or /api when deployed together>
+NEXT_PUBLIC_API_URL=/api
 ```
 
-Do not deploy, connect GitHub, or create cloud database resources until you are ready.
+For the first portfolio deploy, `NEXT_PUBLIC_API_URL=/api` is enough because the frontend and FastAPI backend are deployed together from the same Vercel project. PostgreSQL can be added later.
 
 ## Interview Prep
 

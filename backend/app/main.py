@@ -6,6 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from backend.app import models
@@ -24,6 +25,13 @@ from backend.app.schemas import (
     TelemetryRecordCreate,
     TelemetryRecordRead,
 )
+
+
+def ensure_demo_data(db: Session) -> None:
+    """Seed synthetic demo data when a dashboard endpoint has no records yet."""
+    battery_count = db.scalar(select(func.count(models.Battery.id)))
+    if battery_count == 0:
+        generate_synthetic_fleet(db)
 
 
 @asynccontextmanager
@@ -97,6 +105,7 @@ def create_battery(
 
 @app.get("/batteries", response_model=list[BatteryRead])
 def list_batteries(db: Session = Depends(get_db)) -> Sequence[models.Battery]:
+    ensure_demo_data(db)
     result = db.scalars(select(models.Battery).order_by(models.Battery.battery_id))
     return result.all()
 
@@ -106,6 +115,7 @@ def get_battery_detail(
     battery_id: str,
     db: Session = Depends(get_db),
 ) -> dict:
+    ensure_demo_data(db)
     detail = build_battery_detail(db, battery_id)
     if detail is None:
         raise HTTPException(
@@ -144,6 +154,7 @@ def create_telemetry_record(
 def list_telemetry_records(
     db: Session = Depends(get_db),
 ) -> Sequence[models.TelemetryRecord]:
+    ensure_demo_data(db)
     result = db.scalars(
         select(models.TelemetryRecord).order_by(models.TelemetryRecord.timestamp)
     )
@@ -155,6 +166,7 @@ def list_battery_telemetry(
     battery_id: str,
     db: Session = Depends(get_db),
 ) -> Sequence[models.TelemetryRecord]:
+    ensure_demo_data(db)
     result = db.scalars(
         select(models.TelemetryRecord)
         .where(models.TelemetryRecord.battery_id == battery_id)
@@ -170,19 +182,23 @@ def generate_demo_data(db: Session = Depends(get_db)) -> dict[str, object]:
 
 @app.get("/dashboard/summary")
 def dashboard_summary(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_data(db)
     return build_dashboard_summary(db)
 
 
 @app.get("/dashboard/firmware-incidents")
 def dashboard_firmware_incidents(db: Session = Depends(get_db)) -> list[dict[str, object]]:
+    ensure_demo_data(db)
     return build_firmware_incidents(db)
 
 
 @app.get("/dashboard/battery-health")
 def dashboard_battery_health(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_data(db)
     return build_battery_health(db)
 
 
 @app.get("/diagnostics")
 def diagnostics(db: Session = Depends(get_db)) -> list[dict[str, object]]:
+    ensure_demo_data(db)
     return build_diagnostics(db)
