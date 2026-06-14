@@ -63,6 +63,7 @@ Diagnostic findings:
 
 ```text
 3 overtemperature batteries
+1 critical overtemperature example
 3 abnormal SOH degradation batteries
 5 firmware-related incident batteries
 ```

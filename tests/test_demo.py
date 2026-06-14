@@ -27,6 +27,22 @@ def test_overtemperature_detection(client: TestClient) -> None:
     )
 
 
+def test_critical_overtemperature_detection(client: TestClient) -> None:
+    client.post("/demo/generate")
+
+    response = client.get("/diagnostics")
+
+    assert response.status_code == 200
+    diagnostics = response.json()
+    critical = [
+        item
+        for item in diagnostics
+        if item["battery_id"] == "BAT-009" and item["severity"] == "Critical"
+    ]
+    assert critical
+    assert critical[0]["issue_type"] == "Overtemperature"
+
+
 def test_soh_degradation_detection(client: TestClient) -> None:
     client.post("/demo/generate")
 

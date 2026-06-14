@@ -16,6 +16,7 @@ def generate_synthetic_fleet(db: Session) -> dict[str, object]:
     regions = ["California", "Texas", "Arizona", "Florida", "Nevada"]
 
     overtemperature_batteries = {"BAT-004", "BAT-007", "BAT-009"}
+    critical_overtemperature_batteries = {"BAT-009"}
     soh_degradation_batteries = {"BAT-013", "BAT-014", "BAT-015"}
     firmware_incident_batteries = {"BAT-024", "BAT-025", "BAT-026", "BAT-027", "BAT-028"}
 
@@ -49,6 +50,8 @@ def generate_synthetic_fleet(db: Session) -> dict[str, object]:
 
             if battery_id in overtemperature_batteries and 34 <= hour <= 48:
                 temperature += 18 + rng.normal(0, 1.0)
+                if battery_id in critical_overtemperature_batteries:
+                    temperature += 5
                 if hour % 5 == 0:
                     error_code = "TEMP_HIGH"
 

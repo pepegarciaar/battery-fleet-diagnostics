@@ -45,6 +45,7 @@ Pandas + NumPy Analysis
 | Scenario | Rule |
 | --- | --- |
 | Overtemperature | max temperature > `45 C` |
+| Critical overtemperature | max temperature >= `50 C` |
 | SOH degradation | SOH drop > `4 percentage points` |
 | Firmware incident increase | firmware cohort incident rate > `25%` using `FW-*` error codes |
 

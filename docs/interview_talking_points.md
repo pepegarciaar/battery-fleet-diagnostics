@@ -51,6 +51,7 @@ The current synthetic dataset produces:
 - 19 healthy batteries
 - 11 batteries with issues
 - 3 overtemperature batteries
+- 1 critical overtemperature example
 - 3 abnormal SOH degradation batteries
 - 5 firmware-related incident batteries on firmware `2.1.0`
 
