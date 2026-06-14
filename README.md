@@ -4,6 +4,8 @@ An interview-ready full-stack engineering portfolio demo for residential battery
 
 All telemetry is synthetic. This project does not use Tesla logos, trademarks, proprietary product images, customer data, or real fleet data.
 
+Live demo: [https://battery-fleet-diagnostics.vercel.app](https://battery-fleet-diagnostics.vercel.app)
+
 ![Dashboard overview](docs/screenshots/dashboard-overview.png)
 
 ## Why This Project Exists
