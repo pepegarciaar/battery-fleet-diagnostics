@@ -1,16 +1,17 @@
 .DS_Store
-__pycache__/
-*.py[cod]
+.git/
 .pytest_cache/
 .venv/
-venv/
+.tools/
+__pycache__/
+*.py[cod]
 *.db
 .env
 .env.local
-.tools/
 
 frontend/.next/
 frontend/node_modules/
 frontend/out/
-frontend/npm-debug.log*
-.vercel
+frontend/.env.local
+
+docs/**/*.png
