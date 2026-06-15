@@ -196,6 +196,17 @@ export default function Dashboard() {
     });
   }, [data, diagnosticFilter]);
 
+  const severityCounts = useMemo(() => {
+    if (!data) {
+      return { Critical: 0, Warning: 0, Normal: 0 };
+    }
+    return {
+      Critical: data.diagnostics.filter((diagnostic) => diagnostic.severity === "Critical").length,
+      Warning: data.diagnostics.filter((diagnostic) => diagnostic.severity === "Warning").length,
+      Normal: data.summary.healthy_battery_count
+    };
+  }, [data]);
+
   function navigateToSection(sectionId: SectionId) {
     setActiveSection(sectionId);
     document.getElementById(sectionId)?.scrollIntoView({
@@ -252,16 +263,16 @@ export default function Dashboard() {
                 value={data ? data.summary.fleet_size.toString() : "--"}
               />
               <SidebarMetric
-                label="Risk"
-                value={data ? data.summary.risk_level : "--"}
+                label="Critical"
+                value={data ? severityCounts.Critical.toString() : "--"}
               />
               <SidebarMetric
-                label="Issues"
-                value={data ? data.summary.batteries_with_active_issues.toString() : "--"}
+                label="Warning"
+                value={data ? severityCounts.Warning.toString() : "--"}
               />
               <SidebarMetric
-                label="SOH"
-                value={data ? `${data.summary.average_state_of_health}%` : "--"}
+                label="Normal"
+                value={data ? severityCounts.Normal.toString() : "--"}
               />
             </div>
           </div>
@@ -281,7 +292,7 @@ export default function Dashboard() {
                   SQL telemetry storage, Python/Pandas analysis, diagnostics, FMEA, fault tree, and corrective-action validation.
                 </p>
               </div>
-              <SeverityBadge severity={data?.summary.risk_level ?? "Normal"} />
+              <SeveritySummary counts={severityCounts} />
             </div>
           </header>
 
@@ -844,6 +855,41 @@ function SeverityBadge({ severity }: { severity: "Normal" | "Warning" | "Critica
     <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${classes[severity]}`}>
       {severity}
     </span>
+  );
+}
+
+function SeveritySummary({
+  counts
+}: {
+  counts: Record<"Normal" | "Warning" | "Critical", number>;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      <SeverityCount severity="Critical" count={counts.Critical} />
+      <SeverityCount severity="Warning" count={counts.Warning} />
+      <SeverityCount severity="Normal" count={counts.Normal} />
+    </div>
+  );
+}
+
+function SeverityCount({
+  severity,
+  count
+}: {
+  severity: "Normal" | "Warning" | "Critical";
+  count: number;
+}) {
+  const classes = {
+    Normal: "bg-green-50 text-good border-green-200",
+    Warning: "bg-amber-50 text-warn border-amber-200",
+    Critical: "bg-red-50 text-bad border-red-200"
+  };
+
+  return (
+    <div className={`rounded-md border px-3 py-2 text-sm ${classes[severity]}`}>
+      <span className="font-semibold">{severity}</span>
+      <span className="ml-2 font-bold">{count}</span>
+    </div>
   );
 }
 
