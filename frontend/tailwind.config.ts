@@ -9,14 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        panel: "#ffffff",
-        ink: "#172033",
-        muted: "#667085",
-        line: "#d9e2ec",
-        accent: "#2563eb",
-        good: "#15803d",
-        warn: "#b45309",
-        bad: "#b91c1c"
+        panel: "#f7f7f7",
+        ink: "#222222",
+        muted: "#858585",
+        line: "#d8d8d8",
+        accent: "#d80000",
+        good: "#888888",
+        warn: "#222222",
+        bad: "#d80000"
       }
     }
   },

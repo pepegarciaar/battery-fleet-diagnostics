@@ -216,24 +216,24 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 text-ink">
+    <main className="min-h-screen bg-[#eeeeee] text-ink">
       <div className="mx-auto grid w-full max-w-[1500px] gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8">
         <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
-          <div className="flex h-full flex-col rounded-md border border-line bg-panel p-4 shadow-sm">
-            <div className="border-b border-line pb-4">
+          <div className="flex h-full flex-col rounded-md border border-[#222222] bg-ink p-4 text-white shadow-sm">
+            <div className="border-b border-[#555555] pb-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-accent">
                 Synthetic data
               </p>
               <h1 className="mt-2 text-xl font-semibold leading-tight">
                 Battery Fleet Diagnostic
               </h1>
-              <p className="mt-2 text-sm leading-5 text-muted">
+              <p className="mt-2 text-sm leading-5 text-[#d8d8d8]">
                 Residential energy fleet health and reliability analysis.
               </p>
             </div>
 
             <button
-              className="mt-4 h-11 rounded-md bg-accent px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="mt-4 h-11 rounded-md bg-accent px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-[#b80000] disabled:cursor-not-allowed disabled:bg-[#888888]"
               onClick={generateDemoData}
               disabled={generating}
             >
@@ -246,18 +246,22 @@ export default function Dashboard() {
                   key={item.id}
                   className={`min-w-[170px] rounded-md border px-3 py-3 text-left transition lg:min-w-0 ${
                     activeSection === item.id
-                      ? "border-accent bg-blue-50 text-accent"
-                      : "border-transparent bg-white text-ink hover:border-line hover:bg-slate-50"
+                      ? "border-accent bg-accent text-white"
+                      : "border-transparent bg-[#2f2f2f] text-[#eeeeee] hover:border-[#888888] hover:bg-[#3a3a3a]"
                   }`}
                   onClick={() => navigateToSection(item.id)}
                 >
                   <span className="block text-sm font-semibold">{item.label}</span>
-                  <span className="mt-1 block text-xs text-muted">{item.description}</span>
+                  <span className={`mt-1 block text-xs ${
+                    activeSection === item.id ? "text-[#ffe1e1]" : "text-[#bdbdbd]"
+                  }`}>
+                    {item.description}
+                  </span>
                 </button>
               ))}
             </nav>
 
-            <div className="mt-5 grid grid-cols-2 gap-2 border-t border-line pt-4 text-sm lg:mt-auto">
+            <div className="mt-5 grid grid-cols-2 gap-2 border-t border-[#555555] pt-4 text-sm lg:mt-auto">
               <SidebarMetric
                 label="Fleet"
                 value={data ? data.summary.fleet_size.toString() : "--"}
@@ -297,7 +301,7 @@ export default function Dashboard() {
           </header>
 
           {error ? (
-            <section className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-bad">
+            <section className="rounded-md border border-accent bg-[#fff1f1] p-4 text-sm text-bad">
               API error: {error}. Confirm the FastAPI backend is running and
               NEXT_PUBLIC_API_URL is set correctly.
             </section>
@@ -377,7 +381,7 @@ export default function Dashboard() {
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="incident_battery_count" name="Incident batteries" fill="#2563eb" />
+                    <Bar dataKey="incident_battery_count" name="Incident batteries" fill="#d80000" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartPanel>
@@ -389,7 +393,7 @@ export default function Dashboard() {
                     <XAxis dataKey="range" />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="count" name="Batteries" fill="#15803d" />
+                    <Bar dataKey="count" name="Batteries" fill="#888888" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartPanel>
@@ -404,12 +408,12 @@ export default function Dashboard() {
                     <XAxis dataKey="battery_id" interval={5} tick={{ fontSize: 11 }} />
                     <YAxis domain={[0, 60]} />
                     <Tooltip />
-                    <ReferenceLine y={45} stroke="#b91c1c" strokeDasharray="4 4" label="45 C limit" />
+                    <ReferenceLine y={45} stroke="#d80000" strokeDasharray="4 4" label="45 C limit" />
                     <Bar dataKey="temperature" name="Max temperature C">
                       {data.batteryHealth.temperature_by_battery.map((row) => (
                         <Cell
                           key={row.battery_id}
-                          fill={row.temperature > 45 ? "#b91c1c" : "#b45309"}
+                          fill={row.temperature > 45 ? "#d80000" : "#888888"}
                         />
                       ))}
                     </Bar>
@@ -427,12 +431,12 @@ export default function Dashboard() {
                     <XAxis dataKey="battery_id" interval={5} tick={{ fontSize: 11 }} />
                     <YAxis domain={[80, 100]} />
                     <Tooltip />
-                    <ReferenceLine y={92} stroke="#b45309" strokeDasharray="4 4" label="SOH watch" />
+                    <ReferenceLine y={92} stroke="#222222" strokeDasharray="4 4" label="SOH watch" />
                     <Bar dataKey="state_of_health" name="SOH %">
                       {data.batteryHealth.soh_by_battery.map((row) => (
                         <Cell
                           key={row.battery_id}
-                          fill={row.state_of_health < 92 ? "#b91c1c" : "#0f766e"}
+                          fill={row.state_of_health < 92 ? "#d80000" : "#888888"}
                         />
                       ))}
                     </Bar>
@@ -467,7 +471,7 @@ export default function Dashboard() {
                       key={filter}
                       className={`rounded-md border px-3 py-1.5 text-xs font-semibold ${
                         diagnosticFilter === filter
-                          ? "border-accent bg-blue-50 text-accent"
+                          ? "border-accent bg-[#fff1f1] text-accent"
                           : "border-line bg-white text-muted hover:border-accent hover:text-accent"
                       }`}
                       onClick={() => setDiagnosticFilter(filter)}
@@ -492,7 +496,7 @@ export default function Dashboard() {
                     </thead>
                     <tbody>
                       {filteredDiagnostics.map((diagnostic) => (
-                        <tr key={`${diagnostic.battery_id}-${diagnostic.issue_type}`} className="border-b border-slate-100">
+                        <tr key={`${diagnostic.battery_id}-${diagnostic.issue_type}`} className="border-b border-[#eeeeee]">
                           <td className="py-3 pr-3 font-medium">{diagnostic.battery_id}</td>
                           <td className="py-3 pr-3">{diagnostic.region}</td>
                           <td className="py-3 pr-3">{diagnostic.firmware_version}</td>
@@ -574,7 +578,7 @@ export default function Dashboard() {
                     </thead>
                     <tbody>
                       {data.fmea.map((item) => (
-                        <tr key={item.failure_mode} className="border-b border-slate-100">
+                        <tr key={item.failure_mode} className="border-b border-[#eeeeee]">
                           <td className="py-3 pr-3 font-medium">{item.failure_mode}</td>
                           <td className="py-3 pr-3">{item.system_effect}</td>
                           <td className="py-3 pr-3">{item.detection_method}</td>
@@ -615,7 +619,7 @@ export default function Dashboard() {
                       <XAxis dataKey="phase" />
                       <YAxis allowDecimals={false} />
                       <Tooltip />
-                      <Bar dataKey="count" name={data.correctiveActionValidation.metric} fill="#2563eb" />
+                      <Bar dataKey="count" name={data.correctiveActionValidation.metric} fill="#d80000" />
                     </BarChart>
                   </ResponsiveContainer>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -682,7 +686,7 @@ export default function Dashboard() {
                           batteryDetail.diagnostics.map((item) => (
                             <span
                               key={item.issue_type}
-                              className="rounded-md border border-line bg-slate-50 px-2 py-1 text-xs font-semibold"
+                              className="rounded-md border border-line bg-[#eeeeee] px-2 py-1 text-xs font-semibold"
                             >
                               {item.issue_type}
                             </span>
@@ -713,10 +717,10 @@ export default function Dashboard() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="temperature" name="Temp C" stroke="#b45309" dot={false} />
-                      <Line type="monotone" dataKey="voltage" name="Voltage" stroke="#2563eb" dot={false} />
-                      <Line type="monotone" dataKey="state_of_charge" name="SOC %" stroke="#15803d" dot={false} />
-                      <Line type="monotone" dataKey="state_of_health" name="SOH %" stroke="#0f766e" dot={false} />
+                      <Line type="monotone" dataKey="temperature" name="Temp C" stroke="#d80000" dot={false} />
+                      <Line type="monotone" dataKey="voltage" name="Voltage" stroke="#222222" dot={false} />
+                      <Line type="monotone" dataKey="state_of_charge" name="SOC %" stroke="#888888" dot={false} />
+                      <Line type="monotone" dataKey="state_of_health" name="SOH %" stroke="#555555" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -744,7 +748,7 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
 
 function SidebarMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-line bg-slate-50 p-3">
+    <div className="rounded-md border border-line bg-[#eeeeee] p-3 text-ink">
       <p className="text-[11px] font-semibold uppercase text-muted">{label}</p>
       <p className="mt-1 truncate text-sm font-semibold">{value}</p>
     </div>
@@ -776,7 +780,7 @@ function ScopeItem({
   detail: string;
 }) {
   return (
-    <div className="rounded-md border border-line bg-slate-50 p-3">
+    <div className="rounded-md border border-line bg-[#eeeeee] p-3">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
       <p className="mt-1 font-semibold">{value}</p>
       <p className="mt-1 text-xs text-muted">{detail}</p>
@@ -786,7 +790,7 @@ function ScopeItem({
 
 function MetricTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-line bg-slate-50 p-3">
+    <div className="rounded-md border border-line bg-[#eeeeee] p-3">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
       <p className="mt-1 font-semibold">{value}</p>
     </div>
@@ -847,9 +851,9 @@ function InfoTooltip({ text, compact = false }: { text: string; compact?: boolea
 
 function SeverityBadge({ severity }: { severity: "Normal" | "Warning" | "Critical" }) {
   const classes = {
-    Normal: "bg-green-50 text-good border-green-200",
-    Warning: "bg-amber-50 text-warn border-amber-200",
-    Critical: "bg-red-50 text-bad border-red-200"
+    Normal: "bg-[#eeeeee] text-[#555555] border-[#d8d8d8]",
+    Warning: "bg-[#f7f7f7] text-[#222222] border-[#888888]",
+    Critical: "bg-[#fff1f1] text-bad border-accent"
   };
   return (
     <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${classes[severity]}`}>
@@ -880,9 +884,9 @@ function SeverityCount({
   count: number;
 }) {
   const classes = {
-    Normal: "bg-green-50 text-good border-green-200",
-    Warning: "bg-amber-50 text-warn border-amber-200",
-    Critical: "bg-red-50 text-bad border-red-200"
+    Normal: "bg-[#eeeeee] text-[#555555] border-[#d8d8d8]",
+    Warning: "bg-[#f7f7f7] text-[#222222] border-[#888888]",
+    Critical: "bg-[#fff1f1] text-bad border-accent"
   };
 
   return (
@@ -895,9 +899,9 @@ function SeverityCount({
 
 function PriorityBadge({ priority }: { priority: "Low" | "Medium" | "High" }) {
   const classes = {
-    Low: "bg-green-50 text-good border-green-200",
-    Medium: "bg-amber-50 text-warn border-amber-200",
-    High: "bg-red-50 text-bad border-red-200"
+    Low: "bg-[#eeeeee] text-[#555555] border-[#d8d8d8]",
+    Medium: "bg-[#f7f7f7] text-[#222222] border-[#888888]",
+    High: "bg-[#fff1f1] text-bad border-accent"
   };
   return (
     <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${classes[priority]}`}>
@@ -909,7 +913,7 @@ function PriorityBadge({ priority }: { priority: "Low" | "Medium" | "High" }) {
 function FailureTreeView({ tree }: { tree: FailureTree }) {
   return (
     <div className="mt-4 text-sm">
-      <div className="rounded-md border border-red-200 bg-red-50 p-3">
+      <div className="rounded-md border border-accent bg-[#fff1f1] p-3">
         <p className="text-xs font-semibold uppercase text-bad">Top event</p>
         <p className="mt-1 font-semibold">{tree.top_event}</p>
         <p className="mt-1 text-xs text-muted">
@@ -922,7 +926,7 @@ function FailureTreeView({ tree }: { tree: FailureTree }) {
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {tree.children.map((child) => (
-          <div key={child.label} className="rounded-md border border-line bg-slate-50 p-3">
+          <div key={child.label} className="rounded-md border border-line bg-[#eeeeee] p-3">
             <p className="font-semibold">{child.label}</p>
             <p className="mt-1 text-xs leading-5 text-muted">{child.evidence}</p>
           </div>
