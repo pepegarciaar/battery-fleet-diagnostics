@@ -44,6 +44,7 @@ type DashboardData = {
 };
 
 type DiagnosticFilter = "All" | "Thermal" | "SOH" | "Firmware" | "Warning" | "Critical";
+type SectionId = "overview" | "diagnostics" | "reliability" | "battery-detail";
 
 const diagnosticFilters: DiagnosticFilter[] = [
   "All",
@@ -54,11 +55,39 @@ const diagnosticFilters: DiagnosticFilter[] = [
   "Critical"
 ];
 
+const navigationItems: Array<{
+  id: SectionId;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "overview",
+    label: "Fleet overview",
+    description: "KPIs and fleet charts"
+  },
+  {
+    id: "diagnostics",
+    label: "Diagnostics",
+    description: "Findings and risk readout"
+  },
+  {
+    id: "reliability",
+    label: "Reliability",
+    description: "FMEA, tree, action validation"
+  },
+  {
+    id: "battery-detail",
+    label: "Battery detail",
+    description: "Unit telemetry drilldown"
+  }
+];
+
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [selectedBattery, setSelectedBattery] = useState<string>("");
   const [batteryDetail, setBatteryDetail] = useState<BatteryDetail | null>(null);
   const [diagnosticFilter, setDiagnosticFilter] = useState<DiagnosticFilter>("All");
+  const [activeSection, setActiveSection] = useState<SectionId>("overview");
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -167,58 +196,128 @@ export default function Dashboard() {
     });
   }, [data, diagnosticFilter]);
 
+  function navigateToSection(sectionId: SectionId) {
+    setActiveSection(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 text-ink">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-        <header className="flex flex-col gap-4 border-b border-line pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-accent">
-              Synthetic data
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">
-              Battery Fleet Diagnostic & Reliability Analyzer
-            </h1>
-            <p className="mt-1 text-sm text-muted">
-              Residential Energy Fleet Health Demo
-            </p>
+      <div className="mx-auto grid w-full max-w-[1500px] gap-5 px-4 py-4 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-8">
+        <aside className="lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)]">
+          <div className="flex h-full flex-col rounded-md border border-line bg-panel p-4 shadow-sm">
+            <div className="border-b border-line pb-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+                Synthetic data
+              </p>
+              <h1 className="mt-2 text-xl font-semibold leading-tight">
+                Battery Fleet Diagnostic
+              </h1>
+              <p className="mt-2 text-sm leading-5 text-muted">
+                Residential energy fleet health and reliability analysis.
+              </p>
+            </div>
+
+            <button
+              className="mt-4 h-11 rounded-md bg-accent px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              onClick={generateDemoData}
+              disabled={generating}
+            >
+              {generating ? "Generating..." : "Generate / Refresh Data"}
+            </button>
+
+            <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-x-visible lg:pb-0">
+              {navigationItems.map((item) => (
+                <button
+                  key={item.id}
+                  className={`min-w-[170px] rounded-md border px-3 py-3 text-left transition lg:min-w-0 ${
+                    activeSection === item.id
+                      ? "border-accent bg-blue-50 text-accent"
+                      : "border-transparent bg-white text-ink hover:border-line hover:bg-slate-50"
+                  }`}
+                  onClick={() => navigateToSection(item.id)}
+                >
+                  <span className="block text-sm font-semibold">{item.label}</span>
+                  <span className="mt-1 block text-xs text-muted">{item.description}</span>
+                </button>
+              ))}
+            </nav>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 border-t border-line pt-4 text-sm lg:mt-auto">
+              <SidebarMetric
+                label="Fleet"
+                value={data ? data.summary.fleet_size.toString() : "--"}
+              />
+              <SidebarMetric
+                label="Risk"
+                value={data ? data.summary.risk_level : "--"}
+              />
+              <SidebarMetric
+                label="Issues"
+                value={data ? data.summary.batteries_with_active_issues.toString() : "--"}
+              />
+              <SidebarMetric
+                label="SOH"
+                value={data ? `${data.summary.average_state_of_health}%` : "--"}
+              />
+            </div>
           </div>
-          <button
-            className="h-11 rounded-md bg-accent px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
-            onClick={generateDemoData}
-            disabled={generating}
-          >
-            {generating ? "Generating..." : "Generate / Refresh Data"}
-          </button>
-        </header>
+        </aside>
 
-        {error ? (
-          <section className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-bad">
-            API error: {error}. Confirm the FastAPI backend is running and
-            NEXT_PUBLIC_API_URL is set correctly.
-          </section>
-        ) : null}
+        <div className="flex min-w-0 flex-col gap-6">
+          <header className="rounded-md border border-line bg-panel p-5 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-accent">
+                  Full-stack engineering portfolio
+                </p>
+                <h2 className="mt-1 text-2xl font-semibold sm:text-3xl">
+                  Battery Fleet Diagnostic & Reliability Analyzer
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  SQL telemetry storage, Python/Pandas analysis, diagnostics, FMEA, fault tree, and corrective-action validation.
+                </p>
+              </div>
+              <SeverityBadge severity={data?.summary.risk_level ?? "Normal"} />
+            </div>
+          </header>
 
-        {loading ? (
-          <section className="rounded-md border border-line bg-panel p-6 text-sm text-muted">
-            Loading fleet telemetry...
-          </section>
-        ) : null}
+          {error ? (
+            <section className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-bad">
+              API error: {error}. Confirm the FastAPI backend is running and
+              NEXT_PUBLIC_API_URL is set correctly.
+            </section>
+          ) : null}
 
-        {!loading && data && data.summary.fleet_size === 0 ? (
-          <section className="rounded-md border border-line bg-panel p-6 text-sm text-muted">
-            No telemetry is loaded yet. Generate synthetic data to populate the demo.
-          </section>
-        ) : null}
+          {loading ? (
+            <section className="rounded-md border border-line bg-panel p-6 text-sm text-muted">
+              Loading fleet telemetry...
+            </section>
+          ) : null}
 
-        {data && data.summary.fleet_size > 0 ? (
-          <>
-            <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {!loading && data && data.summary.fleet_size === 0 ? (
+            <section className="rounded-md border border-line bg-panel p-6 text-sm text-muted">
+              No telemetry is loaded yet. Generate synthetic data to populate the demo.
+            </section>
+          ) : null}
+
+          {data && data.summary.fleet_size > 0 ? (
+            <>
+              <section id="overview" className="scroll-mt-4 space-y-4">
+                <SectionHeader
+                  title="Fleet overview"
+                  description="High-level fleet health, injected demo scope, and major telemetry patterns."
+                />
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <KpiCard label="Total fleet" value={data.summary.fleet_size} />
               <KpiCard label="Healthy batteries" value={data.summary.healthy_battery_count} />
               <KpiCard label="Batteries with issues" value={data.summary.batteries_with_active_issues} />
               <KpiCard label="Incident rate" value={`${Math.round(data.summary.incident_rate * 100)}%`} />
               <KpiCard label="Average SOH" value={`${data.summary.average_state_of_health}%`} />
-            </section>
+                </div>
 
             <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
               <div className="rounded-md border border-line bg-panel p-4">
@@ -330,8 +429,14 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartPanel>
             </section>
+              </section>
 
-            <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+              <section id="diagnostics" className="scroll-mt-4 space-y-4">
+                <SectionHeader
+                  title="Diagnostics"
+                  description="Rule-based findings, filters, likely causes, and the current technical readout."
+                />
+                <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
               <div className="rounded-md border border-line bg-panel p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -414,9 +519,15 @@ export default function Dashboard() {
                   <Insight label="Recommended next step" value={data.summary.recommended_next_step} />
                 </dl>
               </aside>
-            </section>
+                </div>
+              </section>
 
-            <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+              <section id="reliability" className="scroll-mt-4 space-y-4">
+                <SectionHeader
+                  title="Reliability engineering"
+                  description="FMEA risk prioritization, critical-event fault tree, and corrective-action effectiveness."
+                />
+                <div className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
               <div className="rounded-md border border-line bg-panel p-4">
                 <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                   <div>
@@ -511,9 +622,15 @@ export default function Dashboard() {
                   </p>
                 </div>
               </div>
-            </section>
+                </div>
+              </section>
 
-            <section className="rounded-md border border-line bg-panel p-4">
+              <section id="battery-detail" className="scroll-mt-4 space-y-4">
+                <SectionHeader
+                  title="Battery detail"
+                  description="Unit-level telemetry and diagnostics for the selected residential battery."
+                />
+                <div className="rounded-md border border-line bg-panel p-4">
               <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <SectionTitle
@@ -595,9 +712,11 @@ export default function Dashboard() {
               ) : (
                 <p className="mt-4 text-sm text-muted">Select a battery to view details.</p>
               )}
-            </section>
-          </>
-        ) : null}
+                </div>
+              </section>
+            </>
+          ) : null}
+        </div>
       </div>
     </main>
   );
@@ -608,6 +727,30 @@ function KpiCard({ label, value }: { label: string; value: string | number }) {
     <div className="rounded-md border border-line bg-panel p-4">
       <p className="text-xs font-semibold uppercase text-muted">{label}</p>
       <p className="mt-2 text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function SidebarMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-line bg-slate-50 p-3">
+      <p className="text-[11px] font-semibold uppercase text-muted">{label}</p>
+      <p className="mt-1 truncate text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function SectionHeader({
+  title,
+  description
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-md border border-line bg-panel px-4 py-3 shadow-sm">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <p className="mt-1 text-sm text-muted">{description}</p>
     </div>
   );
 }
