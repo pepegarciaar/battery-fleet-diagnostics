@@ -32,6 +32,9 @@ This project demonstrates that workflow in a compact, explainable demo.
 - Recharts visualizations
 - Diagnostic table with severity badges and filters
 - Battery-level telemetry detail
+- FMEA register with Severity, Occurrence, Detection, RPN, and priority
+- Failure tree for a critical battery overtemperature event
+- Corrective action validation with before/after effectiveness
 - Vercel-ready monorepo structure
 
 ## Demo Scenarios
@@ -45,6 +48,20 @@ The synthetic fleet injects exactly three visible issue patterns:
 Root causes are presented as hypotheses, not proven conclusions.
 
 ![Diagnostic table](docs/screenshots/diagnostic-table.png)
+
+The diagnostic table converts telemetry symptoms into engineering findings. `Observed` is the measured value that triggered the rule: temperature in Celsius for thermal issues, SOH drop in percentage points for degradation issues, and affected firmware cohort rate for firmware issues.
+
+## Reliability Engineering Views
+
+The dashboard includes compact reliability-engineering artifacts that are easy to explain in an interview:
+
+- **FMEA Register:** lists failure modes, system effects, detection method, Severity, Occurrence, Detection, calculated RPN, and priority.
+- **Failure Tree:** shows a visual fault-tree hypothesis for the critical `BAT-009` overtemperature event.
+- **Corrective Action Validation:** compares the thermal issue count before and after an airflow/thermal-path corrective action.
+
+![Reliability analysis](docs/screenshots/reliability-analysis.png)
+
+These views keep the project simple while demonstrating how fleet telemetry can support FMEA-style prioritization, fault-tree reasoning, and validation of corrective actions.
 
 ## Current Demo Output
 
@@ -212,6 +229,14 @@ GET  /batteries/{battery_id}
 GET  /batteries/{battery_id}/telemetry
 ```
 
+Reliability engineering endpoints:
+
+```text
+GET  /reliability/fmea
+GET  /reliability/failure-tree
+GET  /reliability/corrective-action-validation
+```
+
 For Vercel rewrites, the backend also accepts the same API routes under `/api/...`.
 
 ## Testing
@@ -233,7 +258,7 @@ npm run build
 Verified locally:
 
 ```text
-Backend tests: 6 passed
+Backend tests: 10 passed
 Frontend build: compiled successfully
 ```
 
@@ -253,7 +278,15 @@ Convert telemetry records into fleet KPIs, firmware incident rates, battery heal
 
 **Reliability Engineering**
 
-Compares firmware cohorts, calculates incident rates, identifies affected population, and separates unit-level issues from cohort-level trends.
+Compares firmware cohorts, calculates incident rates, identifies affected population, separates unit-level issues from cohort-level trends, and shows FMEA-style risk prioritization.
+
+**FMEA / FTA**
+
+Uses a compact FMEA register to calculate RPN from Severity, Occurrence, and Detection. Uses a simple fault tree to frame likely causes for a critical overtemperature event without claiming root cause is proven.
+
+**Corrective Action Validation**
+
+Compares before/after counts for a thermal-path corrective action and labels the action as partially effective when warning-level events improve but one critical unit remains open.
 
 **Diagnostics**
 

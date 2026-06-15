@@ -22,7 +22,8 @@ Pandas + NumPy Analysis
 2. Telemetry is persisted through SQLAlchemy models.
 3. Dashboard endpoints load records from SQL.
 4. Pandas DataFrames calculate fleet summaries and diagnostic findings.
-5. The frontend renders KPIs, charts, diagnostic tables, and battery details.
+5. Reliability helpers build the FMEA register, failure tree, and corrective-action validation view.
+6. The frontend renders KPIs, charts, diagnostic tables, reliability artifacts, and battery details.
 
 ## Key Backend Files
 
@@ -48,6 +49,32 @@ Pandas + NumPy Analysis
 | Critical overtemperature | max temperature >= `50 C` |
 | SOH degradation | SOH drop > `4 percentage points` |
 | Firmware incident increase | firmware cohort incident rate > `25%` using `FW-*` error codes |
+
+## Reliability Engineering Artifacts
+
+| View | Purpose |
+| --- | --- |
+| FMEA register | Prioritizes failure modes using Severity, Occurrence, Detection, and RPN |
+| Failure tree | Frames likely contributors to the `BAT-009` critical overtemperature event |
+| Corrective action validation | Compares thermal issue count before and after a thermal-path corrective action |
+
+The FMEA register is intentionally compact. It is designed to show engineering reasoning, not to replace a full production DFMEA process.
+
+Current FMEA examples:
+
+| Failure mode | S | O | D | RPN | Priority |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Overtemperature | 8 | 4 | 3 | 96 | High |
+| Abnormal SOH degradation | 7 | 3 | 4 | 84 | Medium |
+| Firmware-associated incident increase | 6 | 5 | 3 | 90 | High |
+
+Corrective-action validation currently models a thermal path inspection and airflow correction:
+
+```text
+Before: 3 batteries above 45 C
+After:  1 battery above 45 C
+Result: Partially effective
+```
 
 ## Local Ports
 
@@ -107,4 +134,12 @@ Check dashboard summary:
 
 ```bash
 curl http://127.0.0.1:8001/dashboard/summary
+```
+
+Check reliability endpoints:
+
+```bash
+curl http://127.0.0.1:8001/reliability/fmea
+curl http://127.0.0.1:8001/reliability/failure-tree
+curl http://127.0.0.1:8001/reliability/corrective-action-validation
 ```

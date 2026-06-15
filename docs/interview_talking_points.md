@@ -16,7 +16,8 @@ The demo uses FastAPI, SQLAlchemy, SQLite, Pandas, NumPy, Next.js, TypeScript, T
    - increased firmware-related incidents on firmware `2.1.0`.
 4. The backend stores telemetry in SQL and analyzes it with Pandas and NumPy.
 5. The dashboard presents fleet KPIs, firmware incident rates, health distribution, temperature comparison, SOH comparison, diagnostic findings, and battery-level detail.
-6. Root causes are intentionally shown as hypotheses, not proven conclusions.
+6. The reliability section adds an FMEA register, a fault-tree hypothesis for a critical event, and corrective-action validation.
+7. Root causes are intentionally shown as hypotheses, not proven conclusions.
 
 ## Engineering Framing
 
@@ -31,6 +32,9 @@ The project demonstrates:
 - transparent rule-based diagnostics
 - reliability KPI monitoring
 - firmware cohort comparison
+- FMEA-style risk prioritization using Severity, Occurrence, Detection, and RPN
+- fault-tree reasoning for a critical thermal event
+- corrective-action before/after validation
 - technical communication through dashboard design
 
 ## Diagnostic Logic
@@ -59,6 +63,12 @@ The key engineering interpretation is:
 
 > The fleet has localized thermal and SOH issues, plus a cohort-level reliability signal associated with firmware `2.1.0`. The next engineering step would be to inspect thermal environments, review degradation history, and compare firmware incident rates against previous firmware releases before recommending rollback or hotfix validation.
 
+The reliability section adds:
+
+- an FMEA register where overtemperature has RPN `96` and High priority,
+- a failure tree for `BAT-009` critical overtemperature,
+- a corrective-action validation showing thermal issue count improving from `3` to `1`, which is partially effective because one critical unit remains open.
+
 ## Good Interview Questions And Answers
 
 **Why use synthetic data?**
@@ -75,11 +85,11 @@ I would add authentication, background ingestion jobs, database migrations, Post
 
 **How does this show reliability engineering?**
 
-It compares incident rates across firmware cohorts, tracks affected population, identifies repeated failure patterns, and presents risk level and recommended next steps.
+It compares incident rates across firmware cohorts, tracks affected population, identifies repeated failure patterns, presents risk level and recommended next steps, calculates FMEA risk priority numbers, and validates corrective-action effectiveness.
 
 **How does this support root-cause analysis?**
 
-It does not claim root cause is proven. It turns telemetry symptoms into likely hypotheses that an engineer would validate with service history, environment data, firmware history, and additional testing.
+It does not claim root cause is proven. It turns telemetry symptoms into likely hypotheses that an engineer would validate with service history, environment data, firmware history, and additional testing. The failure tree makes that hypothesis structure visible.
 
 ## Suggested Live Demo Flow
 
@@ -88,5 +98,8 @@ It does not claim root cause is proven. It turns telemetry symptoms into likely 
 3. Show firmware incident chart and explain why `2.1.0` stands out.
 4. Show temperature and SOH charts and explain unit-level anomalies.
 5. Use diagnostic filters: Thermal, SOH, Firmware.
-6. Open a battery detail and show recent telemetry plus diagnostics.
-7. End with what you would add next for production.
+6. Show the FMEA register and explain how RPN is calculated from Severity, Occurrence, and Detection.
+7. Show the failure tree for `BAT-009` and explain that it is a hypothesis map, not a final root cause.
+8. Show corrective-action validation and explain why the action is partially effective.
+9. Open a battery detail and show recent telemetry plus diagnostics.
+10. End with what you would add next for production.
