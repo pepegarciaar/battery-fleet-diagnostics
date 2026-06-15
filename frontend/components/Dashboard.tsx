@@ -222,7 +222,10 @@ export default function Dashboard() {
 
             <section className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
               <div className="rounded-md border border-line bg-panel p-4">
-                <h2 className="text-base font-semibold">Demo scope</h2>
+                <SectionTitle
+                  title="Demo scope"
+                  tooltip="Synthetic scenarios injected into the demo fleet so the diagnostic workflow has visible examples."
+                />
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <ScopeItem
                     label="Thermal"
@@ -243,7 +246,10 @@ export default function Dashboard() {
               </div>
 
               <div className="rounded-md border border-line bg-panel p-4">
-                <h2 className="text-base font-semibold">Engineering readout</h2>
+                <SectionTitle
+                  title="Engineering readout"
+                  tooltip="Plain-language interpretation of the fleet signal, written the way an engineer might summarize it for a review."
+                />
                 <p className="mt-3 text-sm leading-6 text-muted">
                   The dashboard separates fleet-level reliability signals from unit-level
                   diagnostics. Root causes are framed as hypotheses and should be validated
@@ -329,7 +335,10 @@ export default function Dashboard() {
               <div className="rounded-md border border-line bg-panel p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-base font-semibold">Diagnostic table</h2>
+                    <SectionTitle
+                      title="Diagnostic table"
+                      tooltip="Rule-based findings generated from telemetry. Observed is the value that triggered each finding."
+                    />
                     <p className="mt-1 text-sm text-muted">
                       Showing {filteredDiagnostics.length} of {data.diagnostics.length} findings
                     </p>
@@ -389,7 +398,10 @@ export default function Dashboard() {
               </div>
 
               <aside className="rounded-md border border-line bg-panel p-4">
-                <h2 className="text-base font-semibold">Technical insight</h2>
+                <SectionTitle
+                  title="Technical insight"
+                  tooltip="Fleet-level interpretation that summarizes the dominant trend, affected population, risk level, and next step."
+                />
                 <dl className="mt-4 space-y-4 text-sm">
                   <Insight label="Main observed trend" value={data.summary.main_observed_trend} />
                   <Insight label="Population affected" value={data.summary.population_affected} />
@@ -408,7 +420,10 @@ export default function Dashboard() {
               <div className="rounded-md border border-line bg-panel p-4">
                 <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <h2 className="text-base font-semibold">FMEA register</h2>
+                    <SectionTitle
+                      title="FMEA register"
+                      tooltip="Failure Mode and Effects Analysis. S, O, and D are scored to calculate RPN and prioritize engineering risk."
+                    />
                     <p className="text-sm text-muted">Severity, occurrence, detection, and risk priority</p>
                   </div>
                   <span className="text-xs text-muted">RPN = S x O x D</span>
@@ -420,10 +435,18 @@ export default function Dashboard() {
                         <th className="py-2 pr-3">Failure mode</th>
                         <th className="py-2 pr-3">Effect</th>
                         <th className="py-2 pr-3">Detection</th>
-                        <th className="py-2 pr-3">S</th>
-                        <th className="py-2 pr-3">O</th>
-                        <th className="py-2 pr-3">D</th>
-                        <th className="py-2 pr-3">RPN</th>
+                        <th className="py-2 pr-3">
+                          <HeaderTooltip label="S" tooltip="Severity: how serious the effect is if the failure occurs." />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <HeaderTooltip label="O" tooltip="Occurrence: how likely or frequent the failure mode is in this demo." />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <HeaderTooltip label="D" tooltip="Detection: how likely the current controls are to detect the issue before impact." />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <HeaderTooltip label="RPN" tooltip="Risk Priority Number. Calculated as Severity x Occurrence x Detection." />
+                        </th>
                         <th className="py-2 pr-3">Priority</th>
                       </tr>
                     </thead>
@@ -449,13 +472,19 @@ export default function Dashboard() {
 
               <div className="grid gap-4">
                 <div className="rounded-md border border-line bg-panel p-4">
-                  <h2 className="text-base font-semibold">Failure tree</h2>
+                  <SectionTitle
+                    title="Failure tree"
+                    tooltip="Fault-tree style hypothesis map for the critical BAT-009 overtemperature event."
+                  />
                   <FailureTreeView tree={data.failureTree} />
                 </div>
 
                 <div className="rounded-md border border-line bg-panel p-4">
                   <div className="mb-3">
-                    <h2 className="text-base font-semibold">Corrective action validation</h2>
+                    <SectionTitle
+                      title="Corrective action validation"
+                      tooltip="Before/after comparison used to check whether a corrective action reduced the targeted failure mode."
+                    />
                     <p className="text-sm text-muted">{data.correctiveActionValidation.action}</p>
                   </div>
                   <ResponsiveContainer width="100%" height={180}>
@@ -487,7 +516,10 @@ export default function Dashboard() {
             <section className="rounded-md border border-line bg-panel p-4">
               <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-base font-semibold">Battery detail</h2>
+                  <SectionTitle
+                    title="Battery detail"
+                    tooltip="Unit-level telemetry view for one selected battery, including recent values and detected diagnostics."
+                  />
                   <p className="text-sm text-muted">Recent telemetry and detected diagnostics</p>
                 </div>
                 <select
@@ -619,6 +651,43 @@ function ChartPanel({
       <h2 className="mb-3 text-base font-semibold">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function SectionTitle({ title, tooltip }: { title: string; tooltip: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <h2 className="text-base font-semibold">{title}</h2>
+      <InfoTooltip text={tooltip} />
+    </div>
+  );
+}
+
+function HeaderTooltip({ label, tooltip }: { label: string; tooltip: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <InfoTooltip text={tooltip} compact />
+    </span>
+  );
+}
+
+function InfoTooltip({ text, compact = false }: { text: string; compact?: boolean }) {
+  const sizeClass = compact ? "h-4 w-4 text-[10px]" : "h-5 w-5 text-xs";
+
+  return (
+    <span className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label={text}
+        className={`${sizeClass} flex items-center justify-center rounded-full border border-line bg-white font-semibold text-muted transition hover:border-accent hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2`}
+      >
+        ?
+      </button>
+      <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 w-64 -translate-x-1/2 rounded-md border border-line bg-ink px-3 py-2 text-left text-xs font-medium normal-case leading-5 text-white opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-within:opacity-100">
+        {text}
+      </span>
+    </span>
   );
 }
 
