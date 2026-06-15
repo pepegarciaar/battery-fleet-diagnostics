@@ -24,8 +24,11 @@ import type {
   Battery,
   BatteryDetail,
   BatteryHealth,
+  CorrectiveActionValidation,
   Diagnostic,
+  FailureTree,
   FirmwareIncident,
+  FmeaItem,
   Summary
 } from "@/lib/api";
 
@@ -35,6 +38,9 @@ type DashboardData = {
   firmwareIncidents: FirmwareIncident[];
   batteryHealth: BatteryHealth;
   diagnostics: Diagnostic[];
+  fmea: FmeaItem[];
+  failureTree: FailureTree;
+  correctiveActionValidation: CorrectiveActionValidation;
 };
 
 type DiagnosticFilter = "All" | "Thermal" | "SOH" | "Firmware" | "Warning" | "Critical";
@@ -61,15 +67,36 @@ export default function Dashboard() {
     setError(null);
     setLoading(true);
     try {
-      const [batteries, summary, firmwareIncidents, batteryHealth, diagnostics] =
+      const [
+        batteries,
+        summary,
+        firmwareIncidents,
+        batteryHealth,
+        diagnostics,
+        fmea,
+        failureTree,
+        correctiveActionValidation
+      ] =
         await Promise.all([
           apiGet<Battery[]>("/batteries"),
           apiGet<Summary>("/dashboard/summary"),
           apiGet<FirmwareIncident[]>("/dashboard/firmware-incidents"),
           apiGet<BatteryHealth>("/dashboard/battery-health"),
-          apiGet<Diagnostic[]>("/diagnostics")
+          apiGet<Diagnostic[]>("/diagnostics"),
+          apiGet<FmeaItem[]>("/reliability/fmea"),
+          apiGet<FailureTree>("/reliability/failure-tree"),
+          apiGet<CorrectiveActionValidation>("/reliability/corrective-action-validation")
         ]);
-      setData({ batteries, summary, firmwareIncidents, batteryHealth, diagnostics });
+      setData({
+        batteries,
+        summary,
+        firmwareIncidents,
+        batteryHealth,
+        diagnostics,
+        fmea,
+        failureTree,
+        correctiveActionValidation
+      });
       const fallbackBattery =
         summary.affected_batteries[0] ?? batteries[0]?.battery_id ?? "";
       setSelectedBattery((current) => current || fallbackBattery);
@@ -377,6 +404,86 @@ export default function Dashboard() {
               </aside>
             </section>
 
+            <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
+              <div className="rounded-md border border-line bg-panel p-4">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="text-base font-semibold">FMEA register</h2>
+                    <p className="text-sm text-muted">Severity, occurrence, detection, and risk priority</p>
+                  </div>
+                  <span className="text-xs text-muted">RPN = S x O x D</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+                    <thead className="border-b border-line text-xs uppercase text-muted">
+                      <tr>
+                        <th className="py-2 pr-3">Failure mode</th>
+                        <th className="py-2 pr-3">Effect</th>
+                        <th className="py-2 pr-3">Detection</th>
+                        <th className="py-2 pr-3">S</th>
+                        <th className="py-2 pr-3">O</th>
+                        <th className="py-2 pr-3">D</th>
+                        <th className="py-2 pr-3">RPN</th>
+                        <th className="py-2 pr-3">Priority</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.fmea.map((item) => (
+                        <tr key={item.failure_mode} className="border-b border-slate-100">
+                          <td className="py-3 pr-3 font-medium">{item.failure_mode}</td>
+                          <td className="py-3 pr-3">{item.system_effect}</td>
+                          <td className="py-3 pr-3">{item.detection_method}</td>
+                          <td className="py-3 pr-3">{item.severity}</td>
+                          <td className="py-3 pr-3">{item.occurrence}</td>
+                          <td className="py-3 pr-3">{item.detection}</td>
+                          <td className="py-3 pr-3 font-semibold">{item.rpn}</td>
+                          <td className="py-3 pr-3">
+                            <PriorityBadge priority={item.priority} />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="rounded-md border border-line bg-panel p-4">
+                  <h2 className="text-base font-semibold">Failure tree</h2>
+                  <FailureTreeView tree={data.failureTree} />
+                </div>
+
+                <div className="rounded-md border border-line bg-panel p-4">
+                  <div className="mb-3">
+                    <h2 className="text-base font-semibold">Corrective action validation</h2>
+                    <p className="text-sm text-muted">{data.correctiveActionValidation.action}</p>
+                  </div>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={validationChartData(data.correctiveActionValidation)} margin={{ left: 4, right: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="phase" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" name={data.correctiveActionValidation.metric} fill="#2563eb" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <MetricTile
+                      label="Reduction"
+                      value={`${Math.round(data.correctiveActionValidation.relative_reduction * 100)}%`}
+                    />
+                    <MetricTile
+                      label="Status"
+                      value={data.correctiveActionValidation.status}
+                    />
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted">
+                    {data.correctiveActionValidation.interpretation}
+                  </p>
+                </div>
+              </div>
+            </section>
+
             <section className="rounded-md border border-line bg-panel p-4">
               <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -528,6 +635,45 @@ function SeverityBadge({ severity }: { severity: "Normal" | "Warning" | "Critica
   );
 }
 
+function PriorityBadge({ priority }: { priority: "Low" | "Medium" | "High" }) {
+  const classes = {
+    Low: "bg-green-50 text-good border-green-200",
+    Medium: "bg-amber-50 text-warn border-amber-200",
+    High: "bg-red-50 text-bad border-red-200"
+  };
+  return (
+    <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${classes[priority]}`}>
+      {priority}
+    </span>
+  );
+}
+
+function FailureTreeView({ tree }: { tree: FailureTree }) {
+  return (
+    <div className="mt-4 text-sm">
+      <div className="rounded-md border border-red-200 bg-red-50 p-3">
+        <p className="text-xs font-semibold uppercase text-bad">Top event</p>
+        <p className="mt-1 font-semibold">{tree.top_event}</p>
+        <p className="mt-1 text-xs text-muted">
+          {tree.focus_battery}: {tree.observed_evidence}
+        </p>
+      </div>
+      <div className="mx-auto h-5 w-px bg-line" />
+      <div className="mx-auto mb-3 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-white text-xs font-semibold">
+        {tree.logic}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {tree.children.map((child) => (
+          <div key={child.label} className="rounded-md border border-line bg-slate-50 p-3">
+            <p className="font-semibold">{child.label}</p>
+            <p className="mt-1 text-xs leading-5 text-muted">{child.evidence}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Insight({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -550,4 +696,11 @@ function recentErrorCodes(detail: BatteryDetail) {
         .filter((errorCode): errorCode is string => Boolean(errorCode))
     )
   );
+}
+
+function validationChartData(validation: CorrectiveActionValidation) {
+  return [
+    { phase: "Before", count: validation.before_count },
+    { phase: "After", count: validation.after_count }
+  ];
 }

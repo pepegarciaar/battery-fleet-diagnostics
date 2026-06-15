@@ -13,8 +13,11 @@ from backend.app import models
 from backend.app.analysis import (
     build_battery_detail,
     build_battery_health,
+    build_corrective_action_validation,
     build_dashboard_summary,
     build_diagnostics,
+    build_failure_tree,
+    build_fmea_register,
     build_firmware_incidents,
 )
 from backend.app.database import get_db, init_db
@@ -51,6 +54,10 @@ frontend_url = os.getenv("FRONTEND_URL")
 allowed_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+    "http://localhost:3002",
+    "http://127.0.0.1:3002",
 ]
 if frontend_url:
     allowed_origins.append(frontend_url)
@@ -202,3 +209,19 @@ def dashboard_battery_health(db: Session = Depends(get_db)) -> dict[str, object]
 def diagnostics(db: Session = Depends(get_db)) -> list[dict[str, object]]:
     ensure_demo_data(db)
     return build_diagnostics(db)
+
+
+@app.get("/reliability/fmea")
+def fmea_register() -> list[dict[str, object]]:
+    return build_fmea_register()
+
+
+@app.get("/reliability/failure-tree")
+def failure_tree() -> dict[str, object]:
+    return build_failure_tree()
+
+
+@app.get("/reliability/corrective-action-validation")
+def corrective_action_validation(db: Session = Depends(get_db)) -> dict[str, object]:
+    ensure_demo_data(db)
+    return build_corrective_action_validation(db)

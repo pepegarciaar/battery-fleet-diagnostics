@@ -70,3 +70,37 @@ def test_firmware_incident_aggregation(client: TestClient) -> None:
     assert firmware_210["battery_count"] == 10
     assert firmware_210["incident_battery_count"] == 5
     assert firmware_210["incident_rate"] == 0.5
+
+
+def test_fmea_register_returns_risk_priority_numbers(client: TestClient) -> None:
+    response = client.get("/reliability/fmea")
+
+    assert response.status_code == 200
+    rows = response.json()
+    overtemperature = next(
+        row for row in rows if row["failure_mode"] == "Overtemperature"
+    )
+    assert overtemperature["rpn"] == 96
+    assert overtemperature["priority"] == "High"
+
+
+def test_failure_tree_focuses_on_critical_battery(client: TestClient) -> None:
+    response = client.get("/reliability/failure-tree")
+
+    assert response.status_code == 200
+    tree = response.json()
+    assert tree["top_event"] == "Critical battery overtemperature"
+    assert tree["focus_battery"] == "BAT-009"
+    assert len(tree["children"]) == 4
+
+
+def test_corrective_action_validation_shows_improvement(client: TestClient) -> None:
+    client.post("/demo/generate")
+
+    response = client.get("/reliability/corrective-action-validation")
+
+    assert response.status_code == 200
+    validation = response.json()
+    assert validation["before_count"] == 3
+    assert validation["after_count"] == 1
+    assert validation["relative_reduction"] > 0

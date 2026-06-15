@@ -38,6 +38,43 @@ export type Diagnostic = {
   recommended_action: string;
 };
 
+export type FmeaItem = {
+  failure_mode: string;
+  system_effect: string;
+  potential_cause: string;
+  detection_method: string;
+  severity: number;
+  occurrence: number;
+  detection: number;
+  rpn: number;
+  priority: "Low" | "Medium" | "High";
+  recommended_action: string;
+};
+
+export type FailureTree = {
+  top_event: string;
+  focus_battery: string;
+  observed_evidence: string;
+  logic: string;
+  children: Array<{
+    label: string;
+    evidence: string;
+  }>;
+};
+
+export type CorrectiveActionValidation = {
+  action: string;
+  target_failure_mode: string;
+  metric: string;
+  before_count: number;
+  after_count: number;
+  before_rate: number;
+  after_rate: number;
+  relative_reduction: number;
+  status: string;
+  interpretation: string;
+};
+
 export type Battery = {
   battery_id: string;
   site_region: string;

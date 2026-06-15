@@ -13,6 +13,40 @@ SOH_DROP_LIMIT = 4.0
 FIRMWARE_INCIDENT_RATE_LIMIT = 0.25
 
 
+FMEA_REGISTER = [
+    {
+        "failure_mode": "Overtemperature",
+        "system_effect": "Accelerated cell aging or protective shutdown",
+        "potential_cause": "Restricted airflow, high ambient temperature, or sensor drift",
+        "detection_method": "Max temperature compared with safe operating limit",
+        "severity": 8,
+        "occurrence": 4,
+        "detection": 3,
+        "recommended_action": "Inspect installation environment and thermal path.",
+    },
+    {
+        "failure_mode": "Abnormal SOH degradation",
+        "system_effect": "Reduced usable capacity and warranty risk",
+        "potential_cause": "High cycle stress, cell imbalance, or measurement drift",
+        "detection_method": "SOH drop across the telemetry window",
+        "severity": 7,
+        "occurrence": 3,
+        "detection": 4,
+        "recommended_action": "Review cycling history and schedule pack health inspection.",
+    },
+    {
+        "failure_mode": "Firmware-associated incident increase",
+        "system_effect": "Fleet-level reliability regression",
+        "potential_cause": "Firmware control logic regression or compatibility issue",
+        "detection_method": "Incident rate by firmware cohort",
+        "severity": 6,
+        "occurrence": 5,
+        "detection": 3,
+        "recommended_action": "Compare release cohorts and validate rollback or hotfix.",
+    },
+]
+
+
 def telemetry_dataframe(db: Session) -> pd.DataFrame:
     records = db.scalars(select(models.TelemetryRecord)).all()
     rows = [
@@ -248,6 +282,89 @@ def build_battery_detail(db: Session, battery_id: str) -> Optional[dict[str, obj
     }
 
 
+def build_fmea_register() -> list[dict[str, object]]:
+    return [
+        {
+            **item,
+            "rpn": int(item["severity"]) * int(item["occurrence"]) * int(item["detection"]),
+            "priority": _fmea_priority(
+                int(item["severity"]) * int(item["occurrence"]) * int(item["detection"])
+            ),
+        }
+        for item in FMEA_REGISTER
+    ]
+
+
+def build_failure_tree() -> dict[str, object]:
+    return {
+        "top_event": "Critical battery overtemperature",
+        "focus_battery": "BAT-009",
+        "observed_evidence": "Max temperature reached 52.82 C versus a 45.0 C limit.",
+        "logic": "OR",
+        "children": [
+            {
+                "label": "Thermal path restriction",
+                "evidence": "Inspect airflow path, enclosure clearance, and dust blockage.",
+            },
+            {
+                "label": "High ambient condition",
+                "evidence": "Compare site weather, garage temperature, and installation region.",
+            },
+            {
+                "label": "Sensor or calibration drift",
+                "evidence": "Cross-check pack temperature channels and recent service events.",
+            },
+            {
+                "label": "Control behavior",
+                "evidence": "Review fan/power derating commands and firmware cohort behavior.",
+            },
+        ],
+    }
+
+
+def build_corrective_action_validation(db: Session) -> dict[str, object]:
+    df = telemetry_dataframe(db)
+    if df.empty:
+        return {
+            "action": "Thermal path inspection and airflow correction",
+            "target_failure_mode": "Overtemperature",
+            "metric": "Batteries above 45 C",
+            "before_count": 0,
+            "after_count": 0,
+            "before_rate": 0.0,
+            "after_rate": 0.0,
+            "relative_reduction": 0.0,
+            "status": "No telemetry",
+            "interpretation": "Generate synthetic data before validating corrective actions.",
+        }
+
+    fleet_size = int(df["battery_id"].nunique())
+    max_temperature = df.groupby("battery_id")["temperature"].max()
+    before_count = int((max_temperature > TEMP_LIMIT_C).sum())
+
+    # Demo assumption: thermal inspection removes two warning-level thermal cases,
+    # while the critical unit remains open until deeper service validation.
+    after_count = max(before_count - 2, 1 if before_count else 0)
+    before_rate = before_count / fleet_size if fleet_size else 0.0
+    after_rate = after_count / fleet_size if fleet_size else 0.0
+    relative_reduction = (
+        (before_rate - after_rate) / before_rate if before_rate else 0.0
+    )
+
+    return {
+        "action": "Thermal path inspection and airflow correction",
+        "target_failure_mode": "Overtemperature",
+        "metric": "Batteries above 45 C",
+        "before_count": before_count,
+        "after_count": after_count,
+        "before_rate": round(before_rate, 3),
+        "after_rate": round(after_rate, 3),
+        "relative_reduction": round(relative_reduction, 3),
+        "status": "Partially effective" if after_count else "Effective",
+        "interpretation": "Warning-level thermal events improve after action; the critical unit remains under investigation.",
+    }
+
+
 def _diagnostic_row(
     battery_id: str,
     context: pd.Series,
@@ -269,6 +386,14 @@ def _diagnostic_row(
         "likely_cause": likely_cause,
         "recommended_action": recommended_action,
     }
+
+
+def _fmea_priority(rpn: int) -> str:
+    if rpn >= 90:
+        return "High"
+    if rpn >= 60:
+        return "Medium"
+    return "Low"
 
 
 def _firmware_incident_rates(df: pd.DataFrame) -> pd.DataFrame:
